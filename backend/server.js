@@ -4,6 +4,7 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const { body, validationResult } = require('express-validator');
 const { OpenAI } = require('openai');
+const LocalAIService = require('./src/services/localAI');
 require('dotenv').config();
 
 // Import routes
@@ -34,6 +35,9 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Initialize Local AI Service
+const localAI = new LocalAIService();
+
 // Routes
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'MedScan AI API is running' });
@@ -51,6 +55,14 @@ app.post('/api/analyze-symptoms', [
 
     const { symptoms } = req.body;
 
+    // Try Local AI first (for development)
+    if (process.env.USE_LOCAL_AI === 'true' || !process.env.OPENAI_API_KEY) {
+      console.log('Using Local AI for symptom analysis');
+      const localResult = localAI.analyzeSymptoms(symptoms);
+      return res.json(localResult);
+    }
+
+    // Use OpenAI if available
     const openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
@@ -67,41 +79,43 @@ Please provide:
 
 Format your response clearly and include a strong disclaimer about consulting healthcare professionals.`;
 
-    // Mock response for testing when API quota is exceeded
-    const mockAnalysis = `Based on your symptoms of a headache for 3 days that's worse in the morning with nausea, here are some preliminary insights:
+    // Try OpenAI API
+    try {
+      const completion = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful medical AI assistant. Provide preliminary analysis but always emphasize that you are not a substitute for professional medical advice."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.3
+      });
 
-**Possible Conditions:**
-- Tension headache (most common)
-- Migraine with associated nausea
-- Sinus congestion or pressure
-- Dehydration-related headache
-
-**Recommended Next Steps:**
-1. Stay well-hydrated by drinking plenty of water
-2. Try over-the-counter pain relievers (acetaminophen or ibuprofen) if appropriate for you
-3. Ensure adequate rest and sleep
-4. Monitor symptoms for any changes or worsening
-
-**When to Seek Immediate Medical Attention:**
-- Sudden severe headache ("worst headache of your life")
-- Headache with fever, stiff neck, or confusion
-- Headache after head injury
-- Vision changes or difficulty speaking
-
-**General Wellness Advice:**
-- Maintain regular sleep schedule
-- Manage stress through relaxation techniques
-- Stay hydrated throughout the day
-- Consider keeping a headache diary to track patterns
-
-**Important Disclaimer:** This is not a medical diagnosis. Please consult a healthcare professional for proper medical advice, especially if symptoms persist or worsen.`;
-
-    res.json({
-      analysis: mockAnalysis,
-      timestamp: new Date().toISOString(),
-      disclaimer: 'This is not a medical diagnosis. Please consult a healthcare professional.',
-      mock: true // Add flag to indicate this is mock data
-    });
+      const analysis = completion.choices[0].message.content;
+      
+      res.json({
+        analysis,
+        timestamp: new Date().toISOString(),
+        disclaimer: 'This is not a medical diagnosis. Please consult a healthcare professional.',
+        openai: true
+      });
+    } catch (openaiError) {
+      console.log('OpenAI API failed, falling back to Local AI:', openaiError.message);
+      
+      // Fallback to Local AI if OpenAI fails
+      const localResult = localAI.analyzeSymptoms(symptoms);
+      res.json({
+        ...localResult,
+        fallback: 'openai_failed',
+        openaiError: openaiError.message
+      });
+    }
 
   } catch (error) {
     console.error('Symptom analysis error:', error);
