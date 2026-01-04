@@ -10,6 +10,7 @@ require('dotenv').config();
 // Import routes
 // const healthRoutes = require('./src/routes/health');
 // const symptomRoutes = require('./src/routes/symptoms');
+const medicalContentRoutes = require('./src/routes/medicalContent');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -42,6 +43,9 @@ const localAI = new LocalAIService();
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'MedScan AI API is running' });
 });
+
+// Medical content generation routes
+app.use('/api/medical-content', medicalContentRoutes);
 
 // Symptom analysis endpoint
 app.post('/api/analyze-symptoms', [
