@@ -7,11 +7,6 @@ const { OpenAI } = require('openai');
 const LocalAIService = require('./src/services/localAI');
 require('dotenv').config();
 
-// Import routes
-// const healthRoutes = require('./src/routes/health');
-// const symptomRoutes = require('./src/routes/symptoms');
-const medicalContentRoutes = require('./src/routes/medicalContent');
-
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -45,7 +40,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Medical content generation routes
-app.use('/api/medical-content', medicalContentRoutes);
+// app.use('/api/medical-content', medicalContentRoutes);
 
 // Symptom analysis endpoint
 app.post('/api/analyze-symptoms', [
@@ -59,10 +54,51 @@ app.post('/api/analyze-symptoms', [
 
     const { symptoms } = req.body;
 
-    // Try Local AI first (for development)
+    // Use Local AI first (for development)
     if (process.env.USE_LOCAL_AI === 'true' || !process.env.OPENAI_API_KEY) {
       console.log('Using Local AI for symptom analysis');
       const localResult = localAI.analyzeSymptoms(symptoms);
+      
+      // For demo purposes, simulate AI response
+      if (localResult.windsurf_ai) {
+        // Simulate what Windsurf AI would return
+        const mockAIResponse = `Based on your symptoms: "${symptoms}"
+
+**Possible Conditions:**
+- Tension headache (most likely)
+- Migraine (if throbbing/pulsating)
+- Dehydration (if not drinking enough fluids)
+- Sinus headache (if congestion present)
+
+**Recommended Next Steps:**
+1. Rest in a quiet, dark room
+2. Stay hydrated - drink plenty of water
+3. Apply cold compress to forehead
+4. Take over-the-counter pain relievers if appropriate
+5. Keep a symptom diary
+
+**When to Seek Medical Attention:**
+- Severe or worsening headache
+- Headache with fever and stiff neck
+- Headache after head injury
+- Vision changes or confusion with headache
+
+**General Wellness Advice:**
+- Maintain regular sleep schedule
+- Manage stress through relaxation techniques
+- Avoid known headache triggers
+- Consider eye strain from screens
+
+${localResult.disclaimer}`;
+        
+        return res.json({
+          analysis: mockAIResponse,
+          timestamp: new Date().toISOString(),
+          disclaimer: localResult.disclaimer,
+          mock_ai: true
+        });
+      }
+      
       return res.json(localResult);
     }
 

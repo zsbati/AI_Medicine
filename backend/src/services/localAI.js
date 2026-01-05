@@ -79,55 +79,27 @@ class LocalAIService {
      * @returns {Object} Analysis result with conditions, severity, and recommendations
      */
     analyzeSymptoms(symptoms) {
-        const normalizedSymptoms = symptoms.toLowerCase();
-        const identifiedPatterns = [];
-        const possibleConditions = new Set();
-        const recommendations = new Set();
-        let maxSeverity = 'mild';
+        // Generate prompt for Windsurf AI
+        const prompt = `As a medical AI assistant, analyze these symptoms and provide preliminary insights:
+        
+Symptoms: "${symptoms}"
 
-        // Check each symptom pattern
-        Object.entries(this.symptomPatterns).forEach(([key, pattern]) => {
-            const matchCount = pattern.keywords.filter(keyword => 
-                normalizedSymptoms.includes(keyword)
-            ).length;
+Please provide:
+1. Possible conditions that might cause these symptoms
+2. Recommended next steps
+3. When to seek immediate medical attention
+4. General wellness advice
 
-            if (matchCount > 0) {
-                identifiedPatterns.push({
-                    symptom: key,
-                    matches: matchCount,
-                    confidence: matchCount / pattern.keywords.length
-                });
-
-                // Add conditions and recommendations
-                pattern.conditions.forEach(condition => possibleConditions.add(condition));
-                pattern.recommendations.forEach(rec => recommendations.add(rec));
-
-                // Update severity (use the highest severity found)
-                if (this._compareSeverity(pattern.severity, maxSeverity) > 0) {
-                    maxSeverity = pattern.severity;
-                }
-            }
-        });
-
-        // Determine affected body systems
-        const affectedSystems = this._identifyBodySystems(normalizedSymptoms);
-
-        // Generate analysis
-        const analysis = this._generateAnalysis(
-            identifiedPatterns,
-            Array.from(possibleConditions),
-            Array.from(recommendations),
-            affectedSystems,
-            maxSeverity,
-            symptoms
-        );
+Format your response clearly and include a strong disclaimer about consulting healthcare professionals.`;
 
         return {
-            analysis,
+            analysis: null, // Will be filled by Windsurf AI
+            prompt: prompt,
+            instructions: "Use Windsurf AI (Ctrl+Shift+I) with the above prompt",
+            local: true,
             timestamp: new Date().toISOString(),
             disclaimer: 'This is not a medical diagnosis. Please consult a healthcare professional.',
-            local: true,
-            confidence: this._calculateConfidence(identifiedPatterns)
+            windsurf_ai: true
         };
     }
 
