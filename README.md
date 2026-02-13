@@ -4,7 +4,7 @@ An intelligent healthcare platform that leverages artificial intelligence to enh
 
 ## Features
 
-- **Intelligent Diagnosis**: AI-powered symptom analysis and disease prediction
+- **Intelligent Diagnosis**: AI-powered symptom analysis using Windsurf AI
 - **Treatment Recommendations**: Personalized treatment suggestions based on patient data
 - **Medical Image Analysis**: Advanced image processing for X-rays, MRIs, and CT scans
 - **Patient Management**: Comprehensive patient record management system
@@ -13,23 +13,22 @@ An intelligent healthcare platform that leverages artificial intelligence to enh
 ## Technology Stack
 
 ### Backend
-- **Framework**: Django/FastAPI
-- **Database**: PostgreSQL
-- **Machine Learning**: TensorFlow, PyTorch, scikit-learn
-- **API**: RESTful API with OpenAPI documentation
+- **Framework**: Node.js with Express
+- **Database**: PostgreSQL (planned)
+- **AI Integration**: Windsurf AI (built-in)
+- **API**: RESTful API
 
 ### Frontend
-- **Framework**: React/Vue.js
-- **UI Components**: Material-UI/Tailwind CSS
-- **State Management**: Redux/Vuex
-- **Charts**: Chart.js/D3.js for medical data visualization
+- **Framework**: React
+- **UI Components**: Tailwind CSS
+- **State Management**: React Query
+- **Charts**: Chart.js for medical data visualization
 
 ## Getting Started
 
 ### Prerequisites
-- Python 3.8+
 - Node.js 14+
-- PostgreSQL 12+
+- npm or yarn
 - Git
 
 ### Installation
@@ -40,40 +39,66 @@ git clone https://github.com/zsbati/AI_Medicine.git
 cd AI_Medicine
 ```
 
-2. Set up the backend:
+2. Install backend dependencies:
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+npm install
 ```
 
-3. Set up the frontend:
+3. Install frontend dependencies:
 ```bash
 cd frontend
 npm install
 ```
 
-4. Configure environment variables:
+### Running the Application
+
+**You need 2 terminals:**
+
+**Terminal 1 - Backend:**
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+cd C:\Users\35196\AImed\backend
+node server.js
 ```
+This starts the AI server on port 5000
 
-5. Run the application:
+**Terminal 2 - Frontend:**
 ```bash
-# Backend
-cd backend
-python manage.py runserver
-
-# Frontend (in separate terminal)
-cd frontend
+cd C:\Users\35196\AImed\frontend
 npm start
 ```
+This starts the website on port 3000
 
-## API Documentation
+### Using the Medical AI
 
-Once the backend is running, visit `http://localhost:8000/api/docs` for interactive API documentation.
+1. Open your browser and go to `http://localhost:3000`
+2. Navigate to the Symptom Checker page
+3. Enter your symptoms (minimum 10 characters)
+4. Click "Analyze Symptoms"
+5. The system will provide a prompt for Windsurf AI
+6. Use `Ctrl+Shift+I` to open Windsurf AI
+7. Paste the prompt and get AI-generated medical insights
+8. Use the AI response for your medical records
+
+### API Endpoints
+
+- `GET /api/health` - Check if backend is running
+- `POST /api/analyze-symptoms` - Analyze symptoms with AI
+
+**Example API usage:**
+```bash
+curl -X POST http://localhost:5000/api/analyze-symptoms \
+  -H "Content-Type: application/json" \
+  -d '{"symptoms":"I have headache and nausea for 2 days"}'
+```
+
+## How It Works
+
+1. **Symptom Input**: Patients enter symptoms through the web interface
+2. **Prompt Generation**: The system creates a medical analysis prompt
+3. **Windsurf AI**: Uses built-in Windsurf AI (`Ctrl+Shift+I`) to analyze symptoms
+4. **Medical Insights**: Returns possible conditions, recommendations, and when to seek help
+5. **Disclaimer**: Always includes medical disclaimer about professional consultation
 
 ## Contributing
 

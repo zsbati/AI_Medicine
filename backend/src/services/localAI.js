@@ -79,27 +79,67 @@ class LocalAIService {
      * @returns {Object} Analysis result with conditions, severity, and recommendations
      */
     analyzeSymptoms(symptoms) {
-        // Generate prompt for Windsurf AI
-        const prompt = `As a medical AI assistant, analyze these symptoms and provide preliminary insights:
+        // Use rule-based analysis for immediate response
+        const symptomsLower = symptoms.toLowerCase();
+        let matchedPatterns = [];
+        let conditions = [];
+        let recommendations = [];
+        let severity = 'mild';
         
-Symptoms: "${symptoms}"
-
-Please provide:
-1. Possible conditions that might cause these symptoms
-2. Recommended next steps
-3. When to seek immediate medical attention
-4. General wellness advice
-
-Format your response clearly and include a strong disclaimer about consulting healthcare professionals.`;
-
+        // Check for emergency symptoms first
+        if (symptomsLower.includes('chest pain') || symptomsLower.includes('chest tightness') || symptomsLower.includes('chest pressure')) {
+            if (symptomsLower.includes('shortness of breath') || symptomsLower.includes('difficulty breathing')) {
+                matchedPatterns.push({ symptom: 'chest_pain_with_breath_difficulty', confidence: 0.9 });
+                conditions = ['Heart attack', 'Pulmonary embolism', 'Severe anxiety attack', 'Pneumonia'];
+                recommendations = ['Call emergency services immediately', 'Do not drive yourself', 'Chew aspirin if available (unless allergic)', 'Stay calm and rest'];
+                severity = 'severe';
+            } else {
+                matchedPatterns.push({ symptom: 'chest_pain', confidence: 0.8 });
+                conditions = ['Heart attack', 'Angina', 'Costochondritis', 'GERD', 'Anxiety'];
+                recommendations = ['Seek immediate medical attention', 'Call emergency services if severe', 'Do not ignore chest pain'];
+                severity = 'severe';
+            }
+        }
+        // Check for headache patterns
+        else if (symptomsLower.includes('headache') || symptomsLower.includes('head pain') || symptomsLower.includes('migraine')) {
+            matchedPatterns.push({ symptom: 'headache', confidence: 0.7 });
+            conditions = ['Tension headache', 'Migraine', 'Sinus headache', 'Dehydration'];
+            recommendations = ['Rest in quiet room', 'Stay hydrated', 'Over-the-counter pain relievers', 'Apply cold compress'];
+            severity = 'mild to moderate';
+        }
+        // Check for fever patterns
+        else if (symptomsLower.includes('fever') || symptomsLower.includes('temperature') || symptomsLower.includes('chills')) {
+            matchedPatterns.push({ symptom: 'fever', confidence: 0.8 });
+            conditions = ['Viral infection', 'Bacterial infection', 'Flu', 'COVID-19'];
+            recommendations = ['Rest and hydration', 'Monitor temperature', 'Fever reducers', 'Seek medical attention if high fever persists'];
+            severity = 'moderate';
+        }
+        // Check for stomach issues
+        else if (symptomsLower.includes('stomach pain') || symptomsLower.includes('abdominal pain') || symptomsLower.includes('nausea')) {
+            matchedPatterns.push({ symptom: 'stomach_pain', confidence: 0.7 });
+            conditions = ['Gastroenteritis', 'Food poisoning', 'Gastritis', 'IBS'];
+            recommendations = ['Clear liquids', 'BRAT diet', 'Rest', 'Avoid solid food temporarily'];
+            severity = 'mild to moderate';
+        }
+        // Default response for unrecognized symptoms
+        else {
+            conditions = ['General malaise', 'Stress-related symptoms', 'Viral infection', 'Dehydration'];
+            recommendations = ['Rest and hydration', 'Monitor symptoms', 'Seek medical attention if symptoms worsen', 'Maintain balanced diet'];
+            severity = 'mild to moderate';
+        }
+        
+        const analysis = this._generateAnalysis(matchedPatterns, conditions, recommendations, [], severity, symptoms);
+        
         return {
-            analysis: null, // Will be filled by Windsurf AI
-            prompt: prompt,
-            instructions: "Use Windsurf AI (Ctrl+Shift+I) with the above prompt",
+            analysis,
+            confidence: this._calculateConfidence(matchedPatterns),
+            severity,
+            conditions,
+            recommendations,
             local: true,
             timestamp: new Date().toISOString(),
             disclaimer: 'This is not a medical diagnosis. Please consult a healthcare professional.',
-            windsurf_ai: true
+            rule_based: true
         };
     }
 

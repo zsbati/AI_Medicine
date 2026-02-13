@@ -97,14 +97,35 @@ const SymptomChecker = () => {
           {result && (
             <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
               <h3 className="text-lg font-semibold text-blue-900 mb-4">Analysis Results</h3>
-              <div className="prose prose-blue max-w-none">
-                <p className="text-gray-700">{result.analysis}</p>
-              </div>
-              <div className="mt-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
-                <p className="text-sm text-yellow-800">
-                  <strong>Disclaimer:</strong> This is not a medical diagnosis. Please consult a healthcare professional for proper medical advice.
-                </p>
-              </div>
+              
+              {result.windsurf_ai ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-white rounded-md border border-gray-200">
+                    <h4 className="font-semibold text-gray-900 mb-2">Windsurf AI Instructions:</h4>
+                    <p className="text-sm text-gray-600 mb-3">{result.instructions}</p>
+                    <div className="bg-gray-50 p-3 rounded-md">
+                      <p className="text-xs font-mono text-gray-700 mb-2">Press Ctrl+Shift+I to open Windsurf AI, then use this prompt:</p>
+                      <div className="bg-white p-3 rounded border border-gray-300">
+                        <code className="text-sm text-gray-800 whitespace-pre-wrap">{result.prompt}</code>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 bg-yellow-50 rounded-md border border-yellow-200">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Disclaimer:</strong> This is not a medical diagnosis. Please consult a healthcare professional for proper medical advice.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="prose prose-blue max-w-none">
+                  <p className="text-gray-700">{result.analysis}</p>
+                  <div className="mt-4 p-4 bg-yellow-50 rounded-md border border-yellow-200">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Disclaimer:</strong> This is not a medical diagnosis. Please consult a healthcare professional for proper medical advice.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
