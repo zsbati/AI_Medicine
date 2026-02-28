@@ -5,6 +5,46 @@
 
 class LocalAIService {
     constructor() {
+        // Enhanced emergency symptom patterns
+        this.emergencyPatterns = {
+            cardiac_emergency: {
+                keywords: ['chest pain', 'chest tightness', 'chest pressure', 'heart attack', 'heart pain', 'crushing chest pain'],
+                severity: 'critical',
+                action: 'Call emergency services immediately (911)',
+                conditions: ['Heart attack', 'Cardiac arrest', 'Severe angina', 'Aortic dissection']
+            },
+            respiratory_emergency: {
+                keywords: ['shortness of breath', 'difficulty breathing', 'cant breathe', 'struggling to breathe', 'wheezing severe', 'choking'],
+                severity: 'critical',
+                action: 'Call emergency services immediately',
+                conditions: ['Pulmonary embolism', 'Severe asthma attack', 'Anaphylaxis', 'Pneumonia']
+            },
+            neurological_emergency: {
+                keywords: ['loss of consciousness', 'fainting', 'seizure', 'stroke symptoms', 'facial drooping', 'slurred speech', 'weakness one side', 'numbness one side'],
+                severity: 'critical',
+                action: 'Call emergency services immediately',
+                conditions: ['Stroke', 'Seizure', 'Brain hemorrhage', 'Neurological emergency']
+            },
+            bleeding_emergency: {
+                keywords: ['severe bleeding', 'uncontrollable bleeding', 'vomiting blood', 'coughing blood', 'blood in stool', 'major injury'],
+                severity: 'critical',
+                action: 'Call emergency services or go to ER immediately',
+                conditions: ['Hemorrhage', 'Internal bleeding', 'Severe trauma']
+            },
+            mental_health_emergency: {
+                keywords: ['suicidal', 'want to die', 'self harm', 'kill myself', 'overdose', 'suicide'],
+                severity: 'critical',
+                action: 'Call suicide prevention hotline: 988',
+                conditions: ['Suicidal ideation', 'Mental health crisis', 'Depression crisis']
+            },
+            injury_emergency: {
+                keywords: ['major injury', 'broken bone', 'fracture', 'head injury', 'unconscious', 'fall from height'],
+                severity: 'severe',
+                action: 'Go to emergency room or call emergency services',
+                conditions: ['Fracture', 'Head trauma', 'Severe injury', 'Internal injury']
+            }
+        };
+
         // Symptom keyword mappings to potential conditions
         this.symptomPatterns = {
             headache: {
@@ -79,32 +119,44 @@ class LocalAIService {
      * @returns {Object} Analysis result with conditions, severity, and recommendations
      */
     analyzeSymptoms(symptoms) {
-        // Use rule-based analysis for immediate response
         const symptomsLower = symptoms.toLowerCase();
+        
+        // Check for emergency patterns first
+        for (const [emergencyType, pattern] of Object.entries(this.emergencyPatterns)) {
+            const matchedKeywords = pattern.keywords.filter(keyword => 
+                symptomsLower.includes(keyword.toLowerCase())
+            );
+            
+            if (matchedKeywords.length > 0) {
+                return this._generateEmergencyResponse(emergencyType, pattern, matchedKeywords, symptoms);
+            }
+        }
+        
+        // Use rule-based analysis for non-emergency symptoms
         let matchedPatterns = [];
         let conditions = [];
         let recommendations = [];
         let severity = 'mild';
         
-        // Check for emergency symptoms first
-        if (symptomsLower.includes('chest pain') || symptomsLower.includes('chest tightness') || symptomsLower.includes('chest pressure')) {
-            if (symptomsLower.includes('shortness of breath') || symptomsLower.includes('difficulty breathing')) {
-                matchedPatterns.push({ symptom: 'chest_pain_with_breath_difficulty', confidence: 0.9 });
-                conditions = ['Heart attack', 'Pulmonary embolism', 'Severe anxiety attack', 'Pneumonia'];
-                recommendations = ['Call emergency services immediately', 'Do not drive yourself', 'Chew aspirin if available (unless allergic)', 'Stay calm and rest'];
-                severity = 'severe';
-            } else {
-                matchedPatterns.push({ symptom: 'chest_pain', confidence: 0.8 });
-                conditions = ['Heart attack', 'Angina', 'Costochondritis', 'GERD', 'Anxiety'];
-                recommendations = ['Seek immediate medical attention', 'Call emergency services if severe', 'Do not ignore chest pain'];
-                severity = 'severe';
-            }
-        }
         // Check for headache patterns
-        else if (symptomsLower.includes('headache') || symptomsLower.includes('head pain') || symptomsLower.includes('migraine')) {
+        if (symptomsLower.includes('headache') || symptomsLower.includes('head pain') || symptomsLower.includes('migraine')) {
             matchedPatterns.push({ symptom: 'headache', confidence: 0.7 });
             conditions = ['Tension headache', 'Migraine', 'Sinus headache', 'Dehydration'];
             recommendations = ['Rest in quiet room', 'Stay hydrated', 'Over-the-counter pain relievers', 'Apply cold compress'];
+            severity = 'mild to moderate';
+        }
+        // Check for back pain patterns
+        else if (symptomsLower.includes('back pain') || symptomsLower.includes('lower back pain') || symptomsLower.includes('backache') || symptomsLower.includes('radiating pain')) {
+            matchedPatterns.push({ symptom: 'back_pain', confidence: 0.8 });
+            conditions = ['Sciatica', 'Herniated disc', 'Muscle strain', 'Pinched nerve', 'Spinal stenosis'];
+            recommendations = ['Apply heat or cold packs', 'Gentle stretching', 'Proper posture', 'Avoid prolonged sitting', 'Seek medical evaluation if persistent'];
+            severity = 'moderate';
+        }
+        // Check for cold/respiratory patterns
+        else if (symptomsLower.includes('runny nose') || symptomsLower.includes('sore throat') || symptomsLower.includes('sneezing') || symptomsLower.includes('congestion') || symptomsLower.includes('stuffy nose')) {
+            matchedPatterns.push({ symptom: 'cold_symptoms', confidence: 0.8 });
+            conditions = ['Common cold', 'Viral infection', 'Allergies', 'Sinus infection', 'COVID-19'];
+            recommendations = ['Rest and hydration', 'Saline nasal spray', 'Warm salt water gargle', 'Over-the-counter cold remedies', 'Monitor for fever'];
             severity = 'mild to moderate';
         }
         // Check for fever patterns
@@ -115,7 +167,7 @@ class LocalAIService {
             severity = 'moderate';
         }
         // Check for stomach issues
-        else if (symptomsLower.includes('stomach pain') || symptomsLower.includes('abdominal pain') || symptomsLower.includes('nausea')) {
+        else if (symptomsLower.includes('stomach pain') || symptomsLower.includes('abdominal pain') || symptomsLower.includes('nausea') || symptomsLower.includes('diarrhea')) {
             matchedPatterns.push({ symptom: 'stomach_pain', confidence: 0.7 });
             conditions = ['Gastroenteritis', 'Food poisoning', 'Gastritis', 'IBS'];
             recommendations = ['Clear liquids', 'BRAT diet', 'Rest', 'Avoid solid food temporarily'];
@@ -139,7 +191,61 @@ class LocalAIService {
             local: true,
             timestamp: new Date().toISOString(),
             disclaimer: 'This is not a medical diagnosis. Please consult a healthcare professional.',
-            rule_based: true
+            rule_based: true,
+            emergency: false
+        };
+    }
+
+    /**
+     * Generate emergency response
+     */
+    _generateEmergencyResponse(emergencyType, pattern, matchedKeywords, originalSymptoms) {
+        let analysis = `🚨 **MEDICAL EMERGENCY DETECTED** 🚨\n\n`;
+        analysis += `Based on your symptoms: "${originalSymptoms}"\n\n`;
+        analysis += `**Emergency Type:** ${emergencyType.replace('_', ' ').toUpperCase()}\n`;
+        analysis += `**Matched Keywords:** ${matchedKeywords.join(', ')}\n\n`;
+        analysis += `**Possible Conditions:**\n`;
+        pattern.conditions.forEach(condition => {
+            analysis += `- ${condition}\n`;
+        });
+        
+        analysis += `\n**⚠️ IMMEDIATE ACTION REQUIRED:**\n`;
+        analysis += `${pattern.action}\n\n`;
+        
+        analysis += `**Additional Instructions:**\n`;
+        if (emergencyType === 'cardiac_emergency') {
+            analysis += `- Chew one regular-strength aspirin (if not allergic)\n`;
+            analysis += `- Loosen tight clothing\n`;
+            analysis += `- Sit or lie down comfortably\n`;
+            analysis += `- Do NOT drive yourself to the hospital\n`;
+        } else if (emergencyType === 'respiratory_emergency') {
+            analysis += `- Sit upright to help breathing\n`;
+            analysis += `- Loosen tight clothing around neck and chest\n`;
+            analysis += `- Use prescribed inhaler if available\n`;
+            analysis += `- Stay calm to avoid worsening breathing\n`;
+        } else if (emergencyType === 'mental_health_emergency') {
+            analysis += `- Remove any means of self-harm\n`;
+            analysis += `- Stay with the person or have someone stay with them\n`;
+            analysis += `- Listen without judgment\n`;
+            analysis += `- Call 988 (Suicide & Crisis Lifeline) immediately\n`;
+        }
+        
+        analysis += `\n**DO NOT WAIT** - These symptoms require immediate medical attention.\n`;
+        analysis += `This system cannot replace emergency medical care.`;
+
+        return {
+            analysis,
+            confidence: 0.95,
+            severity: pattern.severity,
+            conditions: pattern.conditions,
+            recommendations: [pattern.action],
+            local: true,
+            timestamp: new Date().toISOString(),
+            disclaimer: 'This is not a medical diagnosis. Please seek immediate emergency care.',
+            rule_based: true,
+            emergency: true,
+            emergencyType,
+            actionRequired: pattern.action
         };
     }
 
